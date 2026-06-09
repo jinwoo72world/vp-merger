@@ -1,6 +1,8 @@
 # VP Merger 🎬🎶
 
-A premium, hardware-accelerated desktop application designed to easily merge multiple audio tracks, configure crossfades/fades/normalization, and stitch them to a looped background video. Built on **Electron**, **React**, and **TypeScript**, with **FFmpeg** powering the core rendering pipeline.
+A premium, hardware-accelerated desktop application designed to easily merge multiple audio tracks, configure crossfades/fades/normalization, and stitch them to a looped background video. **Specifically optimized for YouTubers creating long-form content (such as 1-hour or 10-hour Lofi streams, study music loops, relaxing ambience videos, and background gaming compilations).**
+
+Built on **Electron**, **React**, and **TypeScript**, with **FFmpeg** powering the core rendering pipeline.
 
 ---
 
