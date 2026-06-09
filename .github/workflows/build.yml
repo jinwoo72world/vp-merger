@@ -7,14 +7,12 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  release:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-latest, macos-latest]
-
+  build-windows:
+    runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -29,21 +27,77 @@ jobs:
         run: npm ci
 
       - name: Build and Package
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            npm run build:win
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            npm run build:mac
-          fi
-        shell: bash
+        run: npm run build:win
 
-      - name: Upload Artifacts
+      - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.os }}
+          name: windows-build
+          path: dist/vp-merger-*-setup.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build and Package
+        run: npm run build:mac
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
           path: |
-            dist/vp-merger-*.exe
             dist/vp-merger-*.dmg
             dist/vp-merger-*.zip
+
+  create-release:
+    needs: [build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build
+          path: release-artifacts
+
+      - name: Download macOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-build
+          path: release-artifacts
+
+      - name: Clean Artifact Structure
+        run: |
+          mkdir -p final-release
+          find release-artifacts -type f -exec cp {} final-release/ \;
+          ls -la final-release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Release v1.0.0 (Windows & macOS)
+          body: |
+            ## VP Merger Release v1.0.0
+            
+            Download the installer for your operating system below:
+            *   **Windows Setup:** `vp-merger-1.0.0-setup.exe`
+            *   **macOS DMG Installer:** `vp-merger-1.0.0.dmg`
+            *   **macOS Zip Application:** `vp-merger-1.0.0.zip`
+          draft: false
+          prerelease: false
+          make_latest: true
+          files: final-release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
