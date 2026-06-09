@@ -1,0 +1,11 @@
+node_modules
+dist
+out
+.DS_Store
+.eslintcache
+*.log*
+main output
+songs
+Intro.mp4
+main.mp4
+outro.mp4
