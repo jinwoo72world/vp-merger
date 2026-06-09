@@ -25,6 +25,8 @@ export interface RenderOptions {
     normalize: boolean
     crossfade: boolean
   }
+  videoFade?: boolean
+  videoFadeDuration?: number
 }
 
 export interface RenderProgress {
@@ -406,9 +408,19 @@ export async function runRenderJob(
   let filterComplex = ''
   let concatCount = 0
 
+  const useFade = options.videoFade ?? true
+  const fadeDuration = options.videoFadeDuration ?? 1
+
   // 1. Intro segment preprocessing
   if (hasIntro) {
-    filterComplex += `[${introIdx}:v]fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2[v_intro]; `
+    let introFilters = `fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`
+    if (useFade) {
+      const actualFd = Math.min(fadeDuration, dIntro / 2)
+      if (actualFd > 0) {
+        introFilters += `,fade=t=out:st=${dIntro - actualFd}:d=${actualFd}`
+      }
+    }
+    filterComplex += `[${introIdx}:v]${introFilters}[v_intro]; `
     if (hasIntroAudio) {
       filterComplex += `[${introIdx}:a]aresample=44100[a_intro]; `
     } else {
@@ -419,13 +431,27 @@ export async function runRenderJob(
 
   // 2. Main background segment preprocessing
   // Trim loop to mergedAudioDuration, scale/pad
-  filterComplex += `[${mainIdx}:v]trim=duration=${mergedAudioDuration},setpts=PTS-STARTPTS,fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2[v_main]; `
+  let mainFilters = `trim=duration=${mergedAudioDuration},setpts=PTS-STARTPTS,fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`
+  if (useFade) {
+    const actualFd = Math.min(fadeDuration, mergedAudioDuration / 2)
+    if (actualFd > 0) {
+      mainFilters += `,fade=t=in:st=0:d=${actualFd},fade=t=out:st=${mergedAudioDuration - actualFd}:d=${actualFd}`
+    }
+  }
+  filterComplex += `[${mainIdx}:v]${mainFilters}[v_main]; `
   filterComplex += `[${audioIdx}:a]aresample=44100[a_main]; `
   concatCount++
 
   // 3. Outro segment preprocessing
   if (hasOutro) {
-    filterComplex += `[${outroIdx}:v]fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2[v_outro]; `
+    let outroFilters = `fps=${targetFPS},scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`
+    if (useFade) {
+      const actualFd = Math.min(fadeDuration, dOutro / 2)
+      if (actualFd > 0) {
+        outroFilters += `,fade=t=in:st=0:d=${actualFd},fade=t=out:st=${dOutro - actualFd}:d=${actualFd}`
+      }
+    }
+    filterComplex += `[${outroIdx}:v]${outroFilters}[v_outro]; `
     if (hasOutroAudio) {
       filterComplex += `[${outroIdx}:a]aresample=44100[a_outro]; `
     } else {

@@ -18,6 +18,8 @@ export interface ProjectData {
     normalize: boolean
     crossfade: boolean
   }
+  videoFade?: boolean
+  videoFadeDuration?: number
 }
 
 export async function saveProject(window: BrowserWindow, data: ProjectData): Promise<string | null> {

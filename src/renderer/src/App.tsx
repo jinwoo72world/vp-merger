@@ -36,6 +36,8 @@ export default function App(): React.JSX.Element {
   const [bitrate, setBitrate] = useState<'Auto' | '10 Mbps' | '20 Mbps' | '40 Mbps' | 'Custom'>('Auto')
   const [customBitrate, setCustomBitrate] = useState(15)
   const [frameRate, setFrameRate] = useState<24 | 30 | 60>(30)
+  const [videoFade, setVideoFade] = useState(true)
+  const [videoFadeDuration, setVideoFadeDuration] = useState(1)
 
   // Audio Settings
   const [fadeIn, setFadeIn] = useState(5)
@@ -169,7 +171,9 @@ export default function App(): React.JSX.Element {
       bitrate,
       customBitrate,
       frameRate,
-      audioSettings: { fadeIn, fadeOut, normalize, crossfade }
+      audioSettings: { fadeIn, fadeOut, normalize, crossfade },
+      videoFade,
+      videoFadeDuration
     }
     const savedPath = await window.api.saveProject(project)
     if (savedPath) {
@@ -191,6 +195,8 @@ export default function App(): React.JSX.Element {
       setBitrate(data.bitrate || 'Auto')
       setCustomBitrate(data.customBitrate || 15)
       setFrameRate(data.frameRate || 30)
+      setVideoFade(data.videoFade ?? true)
+      setVideoFadeDuration(data.videoFadeDuration ?? 1)
       if (data.audioSettings) {
         setFadeIn(data.audioSettings.fadeIn ?? 5)
         setFadeOut(data.audioSettings.fadeOut ?? 5)
@@ -208,6 +214,8 @@ export default function App(): React.JSX.Element {
     setOutputPath('')
     setSongsCount(0)
     setSongsDuration(0)
+    setVideoFade(true)
+    setVideoFadeDuration(1)
   }
 
   // Queue manipulation
@@ -228,7 +236,9 @@ export default function App(): React.JSX.Element {
       bitrate,
       customBitrate,
       frameRate,
-      audioSettings: { fadeIn, fadeOut, normalize, crossfade }
+      audioSettings: { fadeIn, fadeOut, normalize, crossfade },
+      videoFade,
+      videoFadeDuration
     }
 
     const jobName = `Merge Job - ${resolution} (${new Date().toLocaleTimeString()})`
@@ -593,6 +603,35 @@ export default function App(): React.JSX.Element {
                       />
                     </div>
                   )}
+
+                  {/* Video Transitions */}
+                  <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '4px' }}>
+                    <div className="toggle-container" style={{ marginBottom: '14px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: '500' }}>Black Fade Transitions</span>
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={videoFade}
+                          onChange={(e) => setVideoFade(e.target.checked)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </div>
+
+                    {videoFade && (
+                      <div className="form-group">
+                        <label>Fade Duration (Seconds)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="file-input-text"
+                          style={{ fontFamily: 'var(--font-sans)' }}
+                          value={videoFadeDuration}
+                          onChange={(e) => setVideoFadeDuration(Math.max(0.1, parseFloat(e.target.value) || 0))}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

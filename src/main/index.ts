@@ -204,7 +204,9 @@ async function runHeadlessTest(): Promise<void> {
         fadeOut: 2,
         normalize: true,
         crossfade: true
-      }
+      },
+      videoFade: true,
+      videoFadeDuration: 1
     }
 
     console.log('Starting render job with workspace files...')
