@@ -93,8 +93,10 @@ jobs:
             
             Download the installer for your operating system below:
             *   **Windows Setup:** `vp-merger-1.0.0-setup.exe`
-            *   **macOS DMG Installer:** `vp-merger-1.0.0.dmg`
-            *   **macOS Zip Application:** `vp-merger-1.0.0.zip`
+            *   **macOS Apple Silicon (M1/M2/M3) DMG:** `vp-merger-1.0.0-arm64.dmg`
+            *   **macOS Intel (x86_64) DMG:** `vp-merger-1.0.0-x64.dmg`
+            *   **macOS Apple Silicon (M1/M2/M3) Zip:** `vp-merger-1.0.0-arm64.zip`
+            *   **macOS Intel (x86_64) Zip:** `vp-merger-1.0.0-x64.zip`
           draft: false
           prerelease: false
           make_latest: true
