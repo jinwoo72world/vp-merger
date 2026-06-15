@@ -127,11 +127,11 @@ export async function downloadBinaries(onProgress: (step: string, percent: numbe
   const isWin = process.platform === 'win32'
   const FFMPEG_URL = isWin
     ? 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-win-64.zip'
-    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-osx-64.zip'
+    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-macos-64.zip'
 
   const FFPROBE_URL = isWin
     ? 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-win-64.zip'
-    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-osx-64.zip'
+    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-macos-64.zip'
 
   // 1. Download FFmpeg
   onProgress('Downloading FFmpeg...', 0)
