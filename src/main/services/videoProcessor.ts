@@ -142,7 +142,11 @@ $proc = [System.Diagnostics.Process]::GetProcessById(${pid})
 export function pauseRender(): boolean {
   if (activeRenderPid && !isPaused) {
     try {
-      suspendWindowsProcess(activeRenderPid)
+      if (process.platform === 'win32') {
+        suspendWindowsProcess(activeRenderPid)
+      } else {
+        process.kill(activeRenderPid, 'SIGSTOP')
+      }
       isPaused = true
       return true
     } catch (e) {
@@ -155,7 +159,11 @@ export function pauseRender(): boolean {
 export function resumeRender(): boolean {
   if (activeRenderPid && isPaused) {
     try {
-      resumeWindowsProcess(activeRenderPid)
+      if (process.platform === 'win32') {
+        resumeWindowsProcess(activeRenderPid)
+      } else {
+        process.kill(activeRenderPid, 'SIGCONT')
+      }
       isPaused = false
       return true
     } catch (e) {
@@ -170,7 +178,11 @@ export function cancelRender(): void {
     try {
       // Resume if paused first so it can receive termination
       if (isPaused && activeRenderPid) {
-        resumeWindowsProcess(activeRenderPid)
+        if (process.platform === 'win32') {
+          resumeWindowsProcess(activeRenderPid)
+        } else {
+          process.kill(activeRenderPid, 'SIGCONT')
+        }
       }
       activeRenderProcess.kill('SIGKILL')
     } catch (e) {
@@ -481,6 +493,11 @@ export async function runRenderJob(
     args.push('-preset', presetArg, '-pix_fmt', 'yuv420p', '-b:v', bitrateStr)
   } else if (enc === 'h264_qsv') {
     args.push('-preset', presetArg, '-pix_fmt', 'yuv420p', '-b:v', bitrateStr)
+  } else if (enc === 'h264_videotoolbox') {
+    args.push('-pix_fmt', 'yuv420p', '-b:v', bitrateStr)
+    if (options.preset === 'Fast') {
+      args.push('-realtime', '1')
+    }
   }
 
   // Audio codec

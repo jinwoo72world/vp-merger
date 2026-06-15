@@ -21,8 +21,11 @@ export function getBinariesDir(): string {
 
 export async function detectFFmpeg(): Promise<{ ffmpeg: boolean; ffprobe: boolean }> {
   const binariesDir = getBinariesDir()
-  const localFFmpeg = path.join(binariesDir, 'ffmpeg.exe')
-  const localFFprobe = path.join(binariesDir, 'ffprobe.exe')
+  const isWin = process.platform === 'win32'
+  const ffmpegName = isWin ? 'ffmpeg.exe' : 'ffmpeg'
+  const ffprobeName = isWin ? 'ffprobe.exe' : 'ffprobe'
+  const localFFmpeg = path.join(binariesDir, ffmpegName)
+  const localFFprobe = path.join(binariesDir, ffprobeName)
 
   // 1. Check local binaries folder first
   if (fs.existsSync(localFFmpeg) && fs.existsSync(localFFprobe)) {
@@ -101,8 +104,14 @@ function downloadFile(url: string, dest: string, onProgress?: (received: number,
 }
 
 async function extractZip(zipPath: string, destDir: string): Promise<void> {
-  const cmd = `powershell -Command "Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${destDir.replace(/'/g, "''")}' -Force"`
-  await execPromise(cmd)
+  if (process.platform === 'win32') {
+    const cmd = `powershell -Command "Expand-Archive -Path '${zipPath.replace(/'/g, "''")}' -DestinationPath '${destDir.replace(/'/g, "''")}' -Force"`
+    await execPromise(cmd)
+  } else {
+    // macOS/Linux native unzip
+    const cmd = `unzip -o "${zipPath}" -d "${destDir}"`
+    await execPromise(cmd)
+  }
 }
 
 export async function downloadBinaries(onProgress: (step: string, percent: number) => void): Promise<void> {
@@ -115,8 +124,14 @@ export async function downloadBinaries(onProgress: (step: string, percent: numbe
   const ffmpegZip = path.join(tempDir, 'ffmpeg.zip')
   const ffprobeZip = path.join(tempDir, 'ffprobe.zip')
 
-  const FFMPEG_URL = 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-win-64.zip'
-  const FFPROBE_URL = 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-win-64.zip'
+  const isWin = process.platform === 'win32'
+  const FFMPEG_URL = isWin
+    ? 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-win-64.zip'
+    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffmpeg-6.1-osx-64.zip'
+
+  const FFPROBE_URL = isWin
+    ? 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-win-64.zip'
+    : 'https://github.com/ffbinaries/ffbinaries-prebuilt/releases/download/v6.1/ffprobe-6.1-osx-64.zip'
 
   // 1. Download FFmpeg
   onProgress('Downloading FFmpeg...', 0)
@@ -151,11 +166,18 @@ export async function downloadBinaries(onProgress: (step: string, percent: numbe
   }
 
   // Verify paths
-  const localFFmpeg = path.join(binariesDir, 'ffmpeg.exe')
-  const localFFprobe = path.join(binariesDir, 'ffprobe.exe')
+  const ffmpegName = isWin ? 'ffmpeg.exe' : 'ffmpeg'
+  const ffprobeName = isWin ? 'ffprobe.exe' : 'ffprobe'
+  const localFFmpeg = path.join(binariesDir, ffmpegName)
+  const localFFprobe = path.join(binariesDir, ffprobeName)
+
   if (fs.existsSync(localFFmpeg) && fs.existsSync(localFFprobe)) {
     ffmpegPath = localFFmpeg
     ffprobePath = localFFprobe
+    if (!isWin) {
+      fs.chmodSync(localFFmpeg, '755')
+      fs.chmodSync(localFFprobe, '755')
+    }
   } else {
     throw new Error('Downloaded files could not be found')
   }

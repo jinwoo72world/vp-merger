@@ -10,7 +10,7 @@ export async function detectGPUEncoders(): Promise<{
     return { selected: 'libx264', available: [] }
   }
 
-  const encoders = ['h264_nvenc', 'h264_amf', 'h264_qsv']
+  const encoders = ['h264_nvenc', 'h264_amf', 'h264_qsv', 'h264_videotoolbox']
   const available: string[] = []
 
   for (const encoder of encoders) {
@@ -25,7 +25,9 @@ export async function detectGPUEncoders(): Promise<{
   }
 
   let selected = 'libx264'
-  if (available.includes('h264_nvenc')) {
+  if (available.includes('h264_videotoolbox')) {
+    selected = 'h264_videotoolbox'
+  } else if (available.includes('h264_nvenc')) {
     selected = 'h264_nvenc'
   } else if (available.includes('h264_amf')) {
     selected = 'h264_amf'
